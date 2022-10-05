@@ -26,10 +26,3 @@ pipeline
         }
     }
 }
-
-post{
-    
-    always{
-        emailext body: 'testing', subject: 'pipeline status', to: 'loginboopathi@gmail.com'
-    }
-}
