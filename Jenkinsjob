@@ -1,0 +1,35 @@
+pipeline 
+{
+    agent any
+
+    stages {
+        stage('Build') 
+        {
+            steps 
+            {
+                echo 'Build app'
+            }
+        }
+        stage('Test') 
+        {
+            steps 
+            {
+                echo 'Test App'
+            }
+        }
+        stage('Name') 
+        {
+            steps 
+            {
+                echo 'install app'
+            }
+        }
+    }
+}
+
+post{
+    
+    always{
+        emailext body: 'testing', subject: 'pipeline status', to: 'loginboopathi@gmail.com'
+    }
+}
