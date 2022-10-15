@@ -4,7 +4,7 @@
   <groupId>com.mycompany.app</groupId>
   <artifactId>my-app</artifactId>
   <packaging>jar</packaging>
-  <version>1.6.8-SNAPSHOT.jar</version>
+  <version>1.6.6-SNAPSHOT.jar</version>
   <name>my-app</name>
   <url>http://maven.apache.org</url>
   <dependencies>
