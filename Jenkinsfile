@@ -1,96 +1,107 @@
 pipeline{
-   agent {
-       label "mybuildserver"
-   }
+
+    agent any
     tools {
-        maven 'maven'
+    git 'Default'
+    maven 'maven_3.8.6'
     }
     stages{
-        stage("code checkout"){
+        stage("checkout code"){
             steps{
-                echo "========checking out code from github repo========"
-                checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: '2d64d980-832f-4dd0-b22d-b5cb971e0a7a', url: 'https://github.com/vcroshan/simple-java-maven-app.git']]])
+                echo "========executing checkout code========"
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Boopathivellaichamy/simple-java-maven-app.git']]])
             }
             post{
+                always{
+                    echo "========always========"
+                }
                 success{
-                    echo "========Code checkout from Github repo completed========"
+                    echo "========checkout code executed successfully========"
                 }
                 failure{
-                    echo "========Code checkout from Github repo failed========"
+                    echo "========checkout code execution failed========"
                 }
             }
         }
-        stage ("execute script") {
+        stage("Build"){
             steps{
-                echo "Workspace:- $WORKSPACE"
-                echo "Job Name :- $JOB_NAME"
-                echo "Build ID :- $BUILD_ID"
-                echo "Jenkins Home :- $JENKINS_HOME"
-                echo "Inputparam1 : $Inputparam1"
-                echo "InputParam2 : $Inputparam2"
-            }
-        }
-        stage("Build") {
-            steps{
-                sh 'mvn -DskipTests clean package'
+                echo "========Build checkout code========"
+                sh 'mvn clean install'
             }
             post{
-                success {
-                    echo "=========Build completed successfully============="
-                    
+                always{
+                    echo "========always========"
                 }
-                failure {
-                    echo "==========Build failed=========="
-                }
-            }
-        }
-        stage("Unit Testing") {
-            steps{
-                sh 'mvn test'
-            }
-            post {
                 success{
-                    echo "======Unit testing completed successfull, publishing report========="
-                    junit 'target/surefire-reports/*.xml'
+                    echo "========Build executed successfully ========"
+                    archiveArtifacts artifacts: 'target/*jar', followSymlinks: false
                 }
                 failure{
-                    echo "==========unit test cases failed, report not published===="
+                    echo "========Build execution failed========"
                 }
             }
         }
-        stage ("sonar scanning") {
-            steps {
-                script { 
-                    //def scannerHome = tool name: 'mySonarScanner';
-                    withSonarQubeEnv("MySonarqube") {
-                        sh "${tool("mySonarscanner")}/bin/sonar-scanner \
-                        -Dsonar.projectKey=simple-java-maven-app \
-                        -Dsonar.sources=. \
-                        -Dsonar.java.binaries=target \
-                        -Dsonar.host.url=http://172.31.10.15:9000 \
-                        -Dsonar.login=cc178140ffe774764ca39f4c5f009e8756719923"
+                stage("Test"){
+                        steps{
+                            echo "========executing Test========"
+                            sh 'mvn clean test'
+                        }
+                post{
+                    always{
+                        echo "========always========"
                     }
-               }
+                    success{
+                        echo "========Build executed successfully ========"
+                        junit 'target/surefire-reports/*.xml'
+                    }
+                    failure{
+                        echo "========Build execution failed========"
+                        junit 'target/surefire-reports/*.xml'
+                    }
+                }
             }
-        }
-        stage ("Upload to Nexus") {
-            steps {
-                sh "mvn -gs ${WORKSPACE}/settings.xml deploy"
-               }
-            }
+                stage ("sonar scanning") {
+                        steps {
+                            echo "========executing sonar========"
+                            withSonarQubeEnv("mysonarqube") {
+                              sh "${tool("mysonar")}/bin/sonar-scanner \
+                                -Dsonar.projectKey=simple_java_maven_project \
+                                -Dsonar.sources=. \
+                                -Dsonar.java.binaries=target/* \
+                                -Dsonar.host.url=http://35.87.242.111:9000 \
+                                -Dsonar.login=sqa_fd87f5aa26e05c7338297a740c0ce44238aaf253"                                    
+                            }        
+                        }
+                                post{
+                                always{
+                                    echo "========always========"
+                                }
+                                success{
+                                    echo "========Sonar Scanning executed successfully ========"
+                                }
+                                failure{
+                                    echo "========Sonar Scanning execution failed========"
+                                }
+                                }
+                }   
+            stage ("Upload to Nexus") {
+                steps {
+                echo "========Uploading Artifacts========"
+                sh 'mvn -g settings.xml deploy'
+                }
 
-        
-    
-    }
-    post{
-        always{
-            echo "========always========"
-        }
-        success{
-            echo "========pipeline executed successfully ========"
-        }
-        failure{
-            echo "========pipeline execution failed========"
-        }
+                post{
+                always{
+                    echo "========always========"
+                }
+                success{
+                    echo "========Uploading File successfully ========"
+                }
+                failure{
+                    echo "========Uploading File failed========"
+                }
+                }
+            }     
+                            
     }
 }
